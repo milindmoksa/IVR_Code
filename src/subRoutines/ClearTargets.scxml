@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scxml version="1.0" xmlns="http://www.w3.org/2005/07/scxml"
+	xmlns:queue="http://www.genesyslab.com/modules/queue" xmlns:dialog="http://www.genesyslab.com/modules/dialog"
+	xmlns:session="http://www.genesyslab.com/modules/session" xmlns:ixn="http://www.genesyslab.com/modules/interaction"
+	xmlns:xi="http://www.w3.org/2001/XInclude" initial='_composer_entry' profile="ecmascript">
+
+	<!-- SCXML Subroutine clears the current interaction from the specified virtual queue or all queues -->
+	<!-- Params: vQueue -->
+	
+	<state id="_composer_entry">
+		<onentry>
+			<script>
+				var vQueue =  args_.vQueue;
+			</script>
+		</onentry>
+		<initial>
+			<transition target="$$_MY_PREFIX_$$.ClearTargets" />
+		</initial>
+		<state id="ClearTargets">
+			<onentry>
+				<log expr="'Clear Target:' + vQueue + '(' + system.InteractionID + ')'" />
+				<queue:cancel interactionid="system.InteractionID" queue="vQueue"/>
+			</onentry>
+			<transition event="queue.cancel.done" target="$$_MY_PREFIX_$$.ClearTargets.Complete">
+				<log expr="'Cancel DONE: '+_event.toSource()" />
+			</transition>
+		</state>
+		<final id="ClearTargets.Complete">
+			<onentry>
+				<log expr="_sessionid + ': Reached final in ClearTargets SubRoutine Execution'" />
+			</onentry>
+			<donedata>
+			</donedata>
+		</final>
+	</state>
+</scxml>

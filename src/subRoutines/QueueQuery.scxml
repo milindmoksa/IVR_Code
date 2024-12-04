@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scxml version="1.0" xmlns="http://www.w3.org/2005/07/scxml" 
+ 		xmlns:queue="http://www.genesyslab.com/modules/queue" 
+        xmlns:dialog="http://www.genesyslab.com/modules/dialog" 
+        xmlns:session="http://www.genesyslab.com/modules/session" 
+		xmlns:ixn="http://www.genesyslab.com/modules/interaction"
+		xmlns:classification="http://www.genesyslab.com/modules/classification"
+		xmlns:xi="http://www.w3.org/2001/XInclude"
+		initial='_composer_entry'  
+        profile="ecmascript">
+	
+	
+	<!-- SCXML Subroutine queries the status of a request. -->
+
+	<!-- Accepts TargetBlockName or RequestId as Params.
+		If RequestId is passed, it will query using the request ID.
+		Otherwise, TargetBlockName is the name of a Composer Target or a Route Interaction block, and 
+		this subroutine will query the status of the queue:submit request performed by that block.  -->
+	<!-- Returns the following parameters:
+		Priority: this is the current priority of the request,
+		PositionInQueue: this is the current position of the request in the queue,
+		ExpectedWaitTime: this is the expected wait time for the queue in relationship to the request-->
+
+	<state id="_composer_entry">
+		<onentry>
+			<script>
+				var TargetBlockName =  args_.TargetBlockName;
+				var RequestId = args_.RequestId;
+                var Priority;
+				var PositionInQueue;
+				var ExpectedWaitTime;
+			</script>
+		</onentry>
+		<initial>
+			<transition target="$$_MY_PREFIX_$$.QueueQuery" />
+		</initial>
+		<!-- This is the QueueQuery State -->
+		<state id="QueueQuery">
+			<onentry>
+				<if cond="typeof RequestId == 'undefined' &amp;&amp; typeof TargetBlockName != 'undefined'">
+					<assign location="RequestId" expr="eval('App_' + TargetBlockName + '.requestid')"/>
+				</if>				
+				<log expr="'Querying &lt;submit&gt; request ' + RequestId"/>
+				<queue:query requestid="RequestId"/>
+			</onentry>
+			<transition event="queue.query.done" target="$$_MY_PREFIX_$$.Exit">
+				<log expr="'queue query done ' + TargetBlockName" />
+				<assign location="Priority" expr="_event.data.priority"/>
+				<assign location="PositionInQueue" expr="_event.data.positioninqueue"/>
+				<assign location="ExpectedWaitTime" expr="_event.data.invqwaittime"/>
+			</transition>
+		</state>
+		<final id="Exit">
+			<onentry>
+				<log expr="_sessionid + ': Reached final in QueueQuery SubRoutine Execution'" />
+			</onentry>
+			<donedata>
+		    	<param name="Priority" expr="Priority"/>
+		    	<param name="PositionInQueue" expr="PositionInQueue"/>
+		    	<param name="ExpectedWaitTime" expr="ExpectedWaitTime"/>
+			</donedata>
+		</final>
+	</state>
+		
+</scxml>

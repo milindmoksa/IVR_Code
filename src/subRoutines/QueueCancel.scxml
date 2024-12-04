@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scxml version="1.0" xmlns="http://www.w3.org/2005/07/scxml" 
+ 		xmlns:queue="http://www.genesyslab.com/modules/queue" 
+        xmlns:dialog="http://www.genesyslab.com/modules/dialog" 
+        xmlns:session="http://www.genesyslab.com/modules/session" 
+		xmlns:ixn="http://www.genesyslab.com/modules/interaction"
+		xmlns:classification="http://www.genesyslab.com/modules/classification"
+		xmlns:xi="http://www.w3.org/2001/XInclude"
+		initial='_composer_entry'  
+        profile="ecmascript">
+	
+	
+	<!-- SCXML Subroutine removes a request from the queue and from consideration as targets.
+		This is equivalent to doing another <submit> with the attribute clearqueue set to true
+		or to issuing the IRD function Clear Targets. -->
+
+	<!-- Accepts TargetBlockName or RequestId as Params.
+        If RequestId is passed, it will cancel the request ID.
+        Otherwise, TargetBlockName is the name of a Composer Target or a Route Interaction block, and 
+        this subroutine will cancel the queue:submit request performed by that block.  -->
+
+	<state id="_composer_entry">
+		<onentry>
+			<script>
+				var TargetBlockName =  args_.TargetBlockName;
+				var RequestId = args_.RequestId;
+            </script>
+		</onentry>
+		<initial>
+			<transition target="$$_MY_PREFIX_$$.QueueCancel" />
+		</initial>
+		<!-- This is the QueueCancel State -->
+		<state id="QueueCancel">
+			<onentry>
+				<if cond="typeof RequestId == 'undefined' &amp;&amp; typeof TargetBlockName != 'undefined'">
+					<assign location="RequestId" expr="eval('App_' + TargetBlockName + '.requestid')"/>
+				</if>				
+				<log expr="'Cancelling &lt;submit&gt; request ' + RequestId"/>
+				<queue:cancel requestid="RequestId"/>
+			</onentry>
+			<transition event="queue.cancel.done" target="$$_MY_PREFIX_$$.Exit"/>
+		</state>
+		<final id="Exit">
+			<onentry>
+				<log expr="_sessionid + ': Reached final in QueueCancel SubRoutine Execution'" />
+			</onentry>
+		</final>
+	</state>
+		
+</scxml>

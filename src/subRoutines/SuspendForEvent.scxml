@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scxml version="1.0" xmlns="http://www.w3.org/2005/07/scxml"
+	xmlns:queue="http://www.genesyslab.com/modules/queue" xmlns:dialog="http://www.genesyslab.com/modules/dialog"
+	xmlns:session="http://www.genesyslab.com/modules/session" xmlns:ixn="http://www.genesyslab.com/modules/interaction"
+	xmlns:xi="http://www.w3.org/2001/XInclude" initial='_composer_entry' profile="ecmascript">
+
+	<!-- SCXML Subroutine waits for an event till the specified time expires -->
+	<!-- Replacement code for IRDs SuspendForEvent function -->
+	<!-- Accepts Timeout(e.g. '5000ms','5s', etc. ), Type, and Event as Params -->
+	
+	<state id="_composer_entry">
+		<onentry>
+			<script>
+				var delayValue = args_.Timeout;
+				var eventValue = args_.Type;
+				var conditionValue = args_.Event;
+			</script>
+		</onentry>
+		<initial>
+			<transition target="$$_MY_PREFIX_$$.SuspendForEvent" />
+		</initial>
+		<state id="SuspendForEvent">
+			<onentry>
+				<log expr="'Inside SuspendForEvent'"/>
+				<!-- Timeout Field -->
+				<send event="'delay'" delay="delayValue" />
+			</onentry>
+			<transition event="delay" target="$$_MY_PREFIX_$$.Exit">
+				<log expr="'Delay expired: ' + delayValue"></log>
+			</transition>
+			<transition event="eventValue" target="$$_MY_PREFIX_$$.Exit">
+				<log expr="'Event arrived: ' + eventValue"></log>
+			</transition>
+		</state>
+		<final id="Exit">
+			<onentry>
+				<log expr="_sessionid + ': Reached final in SuspendForEvent SubRoutine Execution'" />
+			</onentry>
+		</final>
+		<final id="Error">
+			<onentry>
+				<log expr="_sessionid + ': Reached Error in SuspendForEvent SubRoutine Execution'" />
+			</onentry>
+		</final>
+	</state>
+</scxml>

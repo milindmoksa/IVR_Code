@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scxml version="1.0" xmlns="http://www.w3.org/2005/07/scxml"
+	xmlns:queue="http://www.genesyslab.com/modules/queue" xmlns:dialog="http://www.genesyslab.com/modules/dialog"
+	xmlns:session="http://www.genesyslab.com/modules/session" xmlns:ixn="http://www.genesyslab.com/modules/interaction"
+	xmlns:xi="http://www.w3.org/2001/XInclude" initial='_composer_entry' profile="ecmascript">
+
+	<!-- SCXML Subroutine accepts a voice interaction using the specified resource -->
+	<!-- Params: vResource -->
+	
+	<state id="_composer_entry">
+		<onentry>
+			<script>
+				var vResource =  args_.Resource;
+				var AnswerCallRequestID;
+				var vResult = "";
+			</script>
+		</onentry>
+		<initial>
+			<transition target="$$_MY_PREFIX_$$.AnswerCall" />
+		</initial>
+		<state id="AnswerCall">
+			<onentry>
+				<ixn:accept requestid="AnswerCallRequestID" interactionid="InteractionID" resource="vResource"/>
+			</onentry>
+			<transition event="interaction.accept.done" target="$$_MY_PREFIX_$$.AnswerCall.final">
+				<script>vResult = "return:ok";</script>
+			</transition>
+			<transition event="error.interaction.accept"  target="$$_MY_PREFIX_$$.AnswerCall.final">
+				<script>vResult = "return:error";</script>
+			</transition>
+			<transition event="error.*"  target="$$_MY_PREFIX_$$.AnswerCall.final">
+				<script>vResult = "return:other error";</script>
+			</transition>
+		</state>
+		<final id="AnswerCall.final">
+			<onentry>
+				<log expr="_sessionid + ': Reached final in InteractionAccept SubRoutine Execution'" />
+			</onentry>
+			<donedata>
+				<param name="ReturnValue" expr="vResult"/>
+			</donedata>
+		</final>
+	</state>
+</scxml>
